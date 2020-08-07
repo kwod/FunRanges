@@ -2,5 +2,6 @@ using FunRanges
 using Test
 
 @testset "FunRanges.jl" begin
-    # Write your tests here.
+    fr = FunRange(1, 2, 13, logarithmic)
+    @assert length(fr) == 13
 end
