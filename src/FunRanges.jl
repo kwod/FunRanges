@@ -1,6 +1,6 @@
 module FunRanges
 import Base: iterate, length, getindex, show, convert, first, last
-export FunType, FunRange, bestrats, logarithmic, circular
+export FunType, FunRange, bestrats, linear, logarithmic, circular
 
 @enum FunType linear logarithmic circular
 
@@ -19,7 +19,7 @@ function FunRange(start, stop, len, ft)
 end
 
 function iterate(r::FunRange, state = iterate(r.lr))
-    state == nothing && return nothing
+    isnothing(state) && return nothing
     val, next = state
     rev[r.ft](val), iterate(r.lr, next)
 end
@@ -56,23 +56,25 @@ end
 
 function bestrats(fr::FunRange)
     rats = similar(Array{Rational{Int}}, (length(fr),))
-    function approxrats(lo, hi, i, j)
+    parents = similar(Array{Rational{Int}}, (length(fr),))
+    function approxrats(lo, hi, i, j, parentrat = 1//0)
         mid = lo .+ hi
         mid == [0, 0] && (mid = [0, 1])
         rat = Rational(mid...)
         k = findindex(fr, rat)
         if k > j
-            approxrats(lo, mid, i, j)
+            approxrats(lo, mid, i, j, rat)
         elseif k < i
-            approxrats(mid, hi, i, j)
+            approxrats(mid, hi, i, j, rat)
         else
             @inbounds rats[k] = rat
-            k > i && approxrats(lo, mid, i, k - 1)
-            k < j && approxrats(mid, hi, k + 1, j)
+            @inbounds parents[k] = parentrat
+            k > i && approxrats(lo, mid, i, k - 1, rat)
+            k < j && approxrats(mid, hi, k + 1, j, rat)
         end
     end
     approxrats([-1, 0], [1, 0], 1, length(fr))
-    rats
+    rats, parents
 end
 
 end # module
