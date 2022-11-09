@@ -1,4 +1,8 @@
 module FunRanges
+
+include("Bits.jl")
+include("SBNodes.jl")
+
 import Base: iterate, length, getindex, show, convert, first, last
 export FunType, FunRange, bestrats, linear, logarithmic, circular
 
@@ -55,26 +59,22 @@ function shift(r::FunRange, shiftpart)
 end
 
 function bestrats(fr::FunRange)
-    rats = similar(Array{Rational{Int}}, (length(fr),))
-    parents = similar(Array{Rational{Int}}, (length(fr),))
-    function approxrats(lo, hi, i, j, parentrat = 1//0)
-        mid = lo .+ hi
-        mid == [0, 0] && (mid = [0, 1])
-        rat = Rational(mid...)
+    nds = similar(SSBTNode, (length(fr),))
+    function approxrats(nd, i, j)
+        rat = Rational(nd)
         k = findindex(fr, rat)
         if k > j
-            approxrats(lo, mid, i, j, rat)
+            approxrats(child(nd, false), i, j)
         elseif k < i
-            approxrats(mid, hi, i, j, rat)
+            approxrats(child(nd, true), i, j)
         else
-            @inbounds rats[k] = rat
-            @inbounds parents[k] = parentrat
-            k > i && approxrats(lo, mid, i, k - 1, rat)
-            k < j && approxrats(mid, hi, k + 1, j, rat)
+            @inbounds nds[k] = nd
+            k > i && approxrats(child(nd, false), i, k - 1)
+            k < j && approxrats(child(nd, true), k + 1, j)
         end
     end
-    approxrats([-1, 0], [1, 0], 1, length(fr))
-    rats, parents
+    approxrats(SSBT_root, 1, length(fr))
+    nds
 end
 
 end # module
