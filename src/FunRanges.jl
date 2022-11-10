@@ -1,10 +1,10 @@
 module FunRanges
 
 include("Bits.jl")
-include("SBNodes.jl")
+include("SSBTNodes.jl")
 
-import Base: iterate, length, getindex, show, convert, first, last
-export FunType, FunRange, bestrats, linear, logarithmic, circular
+import Base: iterate, length, getindex, show, convert, first, last, Rational
+export FunType, FunRange, bestrats, linear, logarithmic, circular, parentnode, qm, id, SSBTNode, child, bits
 
 @enum FunType linear logarithmic circular
 
@@ -59,22 +59,22 @@ function shift(r::FunRange, shiftpart)
 end
 
 function bestrats(fr::FunRange)
-    nds = similar(SSBTNode, (length(fr),))
+    nds = Dict{Int64,SSBTNode}()
     function approxrats(nd, i, j)
         rat = Rational(nd)
         k = findindex(fr, rat)
         if k > j
-            approxrats(child(nd, false), i, j)
+            approxrats(childnode(nd, false), i, j)
         elseif k < i
-            approxrats(child(nd, true), i, j)
+            approxrats(childnode(nd, true), i, j)
         else
-            @inbounds nds[k] = nd
-            k > i && approxrats(child(nd, false), i, k - 1)
-            k < j && approxrats(child(nd, true), k + 1, j)
+            nds[k] = nd
+            k > i && approxrats(childnode(nd, false), i, k - 1)
+            k < j && approxrats(childnode(nd, true), k + 1, j)
         end
     end
     approxrats(SSBT_root, 1, length(fr))
-    nds
+    [nds[k] for k in 1:length(fr)]
 end
 
 end # module

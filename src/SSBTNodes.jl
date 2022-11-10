@@ -9,27 +9,27 @@ function mid(nd::SSBTNode)
     iszero(nd.lev) ? [big(0), big(1)] : nd.lo .+ nd.hi
 end
 
-function Rational(nd::SSBTNode)
+function Base.Rational(nd::SSBTNode)
     Rational(mid(nd)...)
 end
 
 SSBT_root = SSBTNode(big.([-1, 0]), big.([1, 0]), 0, big(0))
 
-function parent(nd::SSBTNode)
-    iszero(lev) ? nd :
+function parentnode(nd::SSBTNode)
+    iszero(nd.lev) ? nd :
         isodd(nd.num) ?
-            SBNode(nd.lo .- nd.hi, nd.hi, nd.lev - 1, nd.num >> 1) :
-            SBNode(nd.lo, nd.hi .- nd.lo, nd.lev - 1, nd.num >> 1)
+            SSBTNode(nd.lo .- nd.hi, nd.hi, nd.lev - 1, nd.num >> 1) :
+            SSBTNode(nd.lo, nd.hi .- nd.lo, nd.lev - 1, nd.num >> 1)
 end
 
-function child(nd::SSBTNode, right::Bool)
+function childnode(nd::SSBTNode, right::Bool)
     lo, hi = right ? (mid(nd), nd.hi) : (nd.lo, mid(nd))
     SSBTNode(lo, hi, nd.lev + 1, 2 * nd.num + Int(right))
 end
 
 function SSBTNode(x::Union{Rational, Integer, AbstractFloat})
     if isfinite(x)
-        reduce(child, bits(x), init = SSBT_root)
+        reduce(childnode, bits(x), init = SSBT_root)
     end
 end
 
