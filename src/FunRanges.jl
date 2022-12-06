@@ -16,7 +16,7 @@ struct FunRange{T} <: AbstractRange{T}
     ft::FunType
 end
 
-function FunRange(start, stop, len, ft)
+function FunRange(start::Real, stop::Real, len::Real, ft::FunType)
     FunRange(
         LinRange(fun[ft](start), fun[ft](stop), len),
         ft)
@@ -48,12 +48,12 @@ end
 
 convert(newft::FunType, r::FunRange) = FunRange(first(r), last(r), length(r), newft)
 
-function zoom(r::FunRange, zoomfactor)
+function zoom(r::FunRange, zoomfactor::Real)
     delta = (1-inv(zoomfactor)) * (last(r.lr) - first(r.lr)) / 2
     FunRange(LinRange(r.lr.start+delta, r.lr.stop-delta, length(r)), r.ft)
 end
 
-function shift(r::FunRange, shiftpart)
+function shift(r::FunRange, shiftpart::Real)
     delta = shiftpart * (last(r.lr) - first(r.lr))
     FunRange(LinRange(r.lr.start+delta, r.lr.stop+delta, length(r)), r.ft)
 end

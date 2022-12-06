@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+
 struct SSBTNode
     lo::Vector{BigInt}
     hi::Vector{BigInt}
