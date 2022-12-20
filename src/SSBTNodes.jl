@@ -12,7 +12,7 @@ function mid(nd::SSBTNode)
 end
 
 function Base.Rational(nd::SSBTNode)
-    Rational(mid(nd)...)
+    //(mid(nd)...)
 end
 
 SSBT_root = SSBTNode(big.([-1, 0]), big.([1, 0]), 0, big(0))

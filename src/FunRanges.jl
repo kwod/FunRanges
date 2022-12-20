@@ -2,9 +2,13 @@ module FunRanges
 
 include("Bits.jl")
 include("SSBTNodes.jl")
+include("harmony.jl")
 
 import Base: iterate, length, getindex, show, convert, first, last, Rational
-export FunType, FunRange, bestrats, linear, logarithmic, circular, parentnode, qm, id, SSBTNode, child, bits
+using Base.Threads, Plots
+export FunType, FunRange, bestrats, linear, logarithmic, circular,
+    SSBTNode, childnode, parentnode, qm, id, bits,
+    harmony, plotharmony
 
 @enum FunType linear logarithmic circular
 
@@ -23,9 +27,10 @@ function FunRange(start::Real, stop::Real, len::Real, ft::FunType)
 end
 
 function iterate(r::FunRange, state = iterate(r.lr))
-    isnothing(state) && return nothing
-    val, next = state
-    rev[r.ft](val), iterate(r.lr, next)
+    if !isnothing(state)
+        val, next = state
+        rev[r.ft](val), iterate(r.lr, next)
+    end
 end
 
 length(r::FunRange) = length(r.lr)
@@ -59,22 +64,27 @@ function shift(r::FunRange, shiftpart::Real)
 end
 
 function bestrats(fr::FunRange)
-    nds = Dict{Int64,SSBTNode}()
-    function approxrats(nd, i, j)
+    nds = similar(SSBTNode[], length(fr))
+    ancestorindex = similar(Int[], length(fr))
+    function approxrats(nd, i, j, anci)
         rat = Rational(nd)
         k = findindex(fr, rat)
         if k > j
-            approxrats(childnode(nd, false), i, j)
+            approxrats(childnode(nd, false), i, j, anci)
         elseif k < i
-            approxrats(childnode(nd, true), i, j)
+            approxrats(childnode(nd, true), i, j, anci)
         else
-            nds[k] = nd
-            k > i && approxrats(childnode(nd, false), i, k - 1)
-            k < j && approxrats(childnode(nd, true), k + 1, j)
+            @inbounds nds[k] = nd
+            @inbounds ancestorindex[k] = anci
+            if k > i 
+                lt = @spawn approxrats(childnode(nd, false), i, k - 1, k)
+            end
+            k < j && approxrats(childnode(nd, true), k + 1, j, k)
+            k > i && wait(lt)      
         end
     end
-    approxrats(SSBT_root, 1, length(fr))
-    [nds[k] for k in 1:length(fr)]
+    approxrats(SSBT_root, 1, length(fr), 0)
+    Rational.(nds), ancestorindex
 end
 
 end # module

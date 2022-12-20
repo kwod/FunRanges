@@ -1,7 +1,10 @@
 name = "FunRanges"
 uuid = "72870623-0852-47d2-8820-5118e7b03747"
 authors = ["kwod <kwd@gmx.de> and contributors"]
-version = "0.1.1"
+version = "0.1.2"
+
+[deps]
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 
 [compat]
 julia = "1"
