@@ -19,7 +19,12 @@ function Base.IteratorSize(::Type{Bits})
     Base.SizeUnknown()
 end
 
-function bits(r::Rational)
+"""
+    bits(r::Rational)
+
+bijectiv mapping of real numbers to iterated bits
+"""
+function bits(r::Rational{T}) where T
     if isfinite(r)
         Iterators.flatten(
             if r < 0

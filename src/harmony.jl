@@ -1,4 +1,4 @@
-harmony(r::Rational) = inv(√(abs(r.num) * r.den))
+harmony(r::Rational{T}) where T = inv(√(abs(r.num) * r.den))
 
 function plotharmony()
     lns = 7000
